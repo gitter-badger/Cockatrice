@@ -30,6 +30,8 @@ private:
     QTextCursor prepareBlock(bool same = false);
     void appendCardTag(QTextCursor &cursor, const QString &cardName);
     void appendUrlTag(QTextCursor &cursor, QString url);
+    void appendUserTag(QTextCursor &cursor, QString userName);
+    bool isMyName(QString userName);
 private slots:
     void openLink(const QUrl &link);
 public:

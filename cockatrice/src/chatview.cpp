@@ -15,7 +15,7 @@ ChatView::ChatView(const TabSupervisor *_tabSupervisor, TabGame *_game, bool _sh
     document()->setDefaultStyleSheet("a { text-decoration: none; color: blue; }");
     userContextMenu = new UserContextMenu(tabSupervisor, this, game);
     connect(userContextMenu, SIGNAL(openMessageDialog(QString, bool)), this, SIGNAL(openMessageDialog(QString, bool)));
-    
+
     viewport()->setCursor(Qt::IBeamCursor);
     setReadOnly(true);
     setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
@@ -31,7 +31,7 @@ void ChatView::retranslateUi()
 QTextCursor ChatView::prepareBlock(bool same)
 {
     lastSender.clear();
-    
+
     QTextCursor cursor(document()->lastBlock());
     cursor.movePosition(QTextCursor::End);
     if (!same) {
@@ -42,7 +42,7 @@ QTextCursor ChatView::prepareBlock(bool same)
         cursor.insertBlock(blockFormat);
     } else
         cursor.insertHtml("<br>");
-    
+
     return cursor;
 }
 
@@ -61,9 +61,30 @@ void ChatView::appendCardTag(QTextCursor &cursor, const QString &cardName)
     anchorFormat.setForeground(Qt::blue);
     anchorFormat.setAnchor(true);
     anchorFormat.setAnchorHref("card://" + cardName);
-    
+
     cursor.setCharFormat(anchorFormat);
     cursor.insertText(cardName);
+    cursor.setCharFormat(oldFormat);
+}
+
+void ChatView::appendUserTag(QTextCursor &cursor, QString userName)
+{
+    QTextCharFormat oldFormat = cursor.charFormat();
+    QTextCharFormat anchorFormat = oldFormat;
+
+    if (isMyName(userName)) {
+        anchorFormat.setForeground(Qt::red);
+        anchorFormat.setFontWeight(QFont::Bold);
+        // TODO: Sound notify or other alert here
+    } else {
+        anchorFormat.setForeground(Qt::blue);
+    }
+
+    anchorFormat.setAnchor(true);
+    anchorFormat.setAnchorHref("user://" + QString::number(userLevel) + "_" + userName);
+
+    cursor.setCharFormat(anchorFormat);
+    cursor.insertText(userName);
     cursor.setCharFormat(oldFormat);
 }
 
@@ -71,13 +92,13 @@ void ChatView::appendUrlTag(QTextCursor &cursor, QString url)
 {
     if (!url.contains("://"))
         url.prepend("http://");
-    
+
     QTextCharFormat oldFormat = cursor.charFormat();
     QTextCharFormat anchorFormat = oldFormat;
     anchorFormat.setForeground(Qt::blue);
     anchorFormat.setAnchor(true);
     anchorFormat.setAnchorHref(url);
-    
+
     cursor.setCharFormat(anchorFormat);
     cursor.insertText(url);
     cursor.setCharFormat(oldFormat);
@@ -89,16 +110,16 @@ void ChatView::appendMessage(QString message, QString sender, UserLevelFlags use
     bool sameSender = (sender == lastSender) && !lastSender.isEmpty();
     QTextCursor cursor = prepareBlock(sameSender);
     lastSender = sender;
-    
+
     if (showTimestamps && !sameSender) {
         QTextCharFormat timeFormat;
         timeFormat.setForeground(Qt::black);
         cursor.setCharFormat(timeFormat);
         cursor.insertText(QDateTime::currentDateTime().toString("[hh:mm] "));
     }
-    
+
     QTextCharFormat senderFormat;
-    if (tabSupervisor && tabSupervisor->getUserInfo() && (sender == QString::fromStdString(tabSupervisor->getUserInfo()->name()))) {
+    if (isMyName(sender)) {
         senderFormat.setFontWeight(QFont::Bold);
         senderFormat.setForeground(Qt::red);
     } else {
@@ -120,12 +141,12 @@ void ChatView::appendMessage(QString message, QString sender, UserLevelFlags use
         cursor.insertText(sender);
     } else
         cursor.insertText("    ");
-    
+
     QTextCharFormat messageFormat;
     if (sender.isEmpty())
         messageFormat.setForeground(Qt::darkGreen);
     cursor.setCharFormat(messageFormat);
-    
+
     int from = 0, index = 0;
     while ((index = message.indexOf('[', from)) != -1) {
         cursor.insertText(message.left(index));
@@ -141,7 +162,7 @@ void ChatView::appendMessage(QString message, QString sender, UserLevelFlags use
                 message.clear();
             else
                 message = message.mid(closeTagIndex + 7);
-            
+
             appendCardTag(cursor, cardName);
         } else if (message.startsWith("[[")) {
             message = message.mid(2);
@@ -151,7 +172,7 @@ void ChatView::appendMessage(QString message, QString sender, UserLevelFlags use
                 message.clear();
             else
                 message = message.mid(closeTagIndex + 2);
-            
+
             appendCardTag(cursor, cardName);
         } else if (message.startsWith("[url]")) {
             message = message.mid(5);
@@ -161,16 +182,42 @@ void ChatView::appendMessage(QString message, QString sender, UserLevelFlags use
                 message.clear();
             else
                 message = message.mid(closeTagIndex + 6);
-            
+
             appendUrlTag(cursor, url);
         } else
             from = 1;
     }
+
+    from = 0, index = 0;
+    while ((index = message.indexOf('@', from)) != -1) {
+        cursor.insertText(message.left(index));
+        message = message.mid(index);
+        if (message.isEmpty()) break;
+        if (message.startsWith('@')) {
+            message = message.mid(1);
+            int endOfName = message.indexOf(' ');
+            QString userName = message.left(endOfName);
+            if (endOfName == -1)
+                message.clear();
+            else
+                message = message.mid(endOfName + 1);
+
+            appendUserTag(cursor, userName);
+        }
+    }
+
     if (!message.isEmpty())
         cursor.insertText(message);
-    
+
     if (atBottom)
         verticalScrollBar()->setValue(verticalScrollBar()->maximum());
+}
+
+bool ChatView::isMyName(QString userName)
+{
+    return (tabSupervisor &&
+            tabSupervisor->getUserInfo() &&
+            (userName == QString::fromStdString(tabSupervisor->getUserInfo()->name())));
 }
 
 void ChatView::enterEvent(QEvent * /*event*/)
@@ -220,7 +267,7 @@ void ChatView::mouseMoveEvent(QMouseEvent *event)
         hoveredItemType = HoveredNothing;
         viewport()->setCursor(Qt::IBeamCursor);
     }
-    
+
     QTextBrowser::mouseMoveEvent(event);
 }
 
@@ -237,7 +284,7 @@ void ChatView::mousePressEvent(QMouseEvent *event)
                 const int delimiterIndex = hoveredContent.indexOf("_");
                 UserLevelFlags userLevel(hoveredContent.left(delimiterIndex).toInt());
                 const QString userName = hoveredContent.mid(delimiterIndex + 1);
-                
+
                 userContextMenu->showContextMenu(event->globalPos(), userName, userLevel);
             }
             break;
@@ -252,7 +299,7 @@ void ChatView::mouseReleaseEvent(QMouseEvent *event)
 {
     if ((event->button() == Qt::MidButton) || (event->button() == Qt::LeftButton))
         emit deleteCardInfoPopup(QString("_"));
-    
+
     QTextBrowser::mouseReleaseEvent(event);
 }
 
@@ -260,6 +307,6 @@ void ChatView::openLink(const QUrl &link)
 {
     if ((link.scheme() == "card") || (link.scheme() == "user"))
         return;
-    
+
     QDesktopServices::openUrl(link);
 }
