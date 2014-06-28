@@ -37,7 +37,7 @@ void CardZone::clearContents()
         const QList<CardItem *> &attachedCards = cards[i]->getAttachedCards();
         for (int j = 0; j < attachedCards.size(); ++j)
             attachedCards[j]->setParentItem(attachedCards[j]->getZone());
-        
+
         player->deleteCard(cards.at(i));
     }
     cards.clear();

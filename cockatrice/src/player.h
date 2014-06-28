@@ -123,20 +123,21 @@ public slots:
 
     void actViewLibrary();
     void actViewTopCards();
+    void actViewBottomCard();
     void actAlwaysRevealTopCard();
     void actViewGraveyard();
     void actViewRfg();
     void actViewSideboard();
-    
+
     void actSayMessage();
 private slots:
     void addPlayer(Player *player);
     void removePlayer(Player *player);
     void playerListActionTriggered();
-    
+
     void updateBoundingRect();
     void rearrangeZones();
-    
+
     void actOpenDeckInDeckEditor();
     void actCreatePredefinedToken();
     void cardMenuAction();
@@ -165,12 +166,13 @@ private:
     QAction *aMoveHandToTopLibrary, *aMoveHandToBottomLibrary, *aMoveHandToGrave, *aMoveHandToRfg,
         *aMoveGraveToTopLibrary, *aMoveGraveToBottomLibrary, *aMoveGraveToHand, *aMoveGraveToRfg,
         *aMoveRfgToTopLibrary, *aMoveRfgToBottomLibrary, *aMoveRfgToHand, *aMoveRfgToGrave,
-        *aViewLibrary, *aViewTopCards, *aAlwaysRevealTopCard, *aOpenDeckInDeckEditor, *aMoveTopCardsToGrave, *aMoveTopCardsToExile, *aMoveTopCardToBottom,
+        *aViewLibrary, *aViewTopCards, *aViewBottomCard, *aAlwaysRevealTopCard, *aOpenDeckInDeckEditor,
+        *aMoveTopCardsToGrave, *aMoveTopCardsToExile, *aMoveTopCardToBottom,
         *aViewGraveyard, *aViewRfg, *aViewSideboard,
-                *aDrawCard, *aDrawCards, *aUndoDraw, *aMulligan, *aShuffle,
+        *aDrawCard, *aDrawCards, *aUndoDraw, *aMulligan, *aShuffle,
         *aUntapAll, *aRollDie, *aCreateToken, *aCreateAnotherToken,
         *aCardMenu;
-    
+
     QList<QAction *> aAddCounter, aSetCounter, aRemoveCounter;
     QAction *aPlay,
         *aHide,
@@ -188,7 +190,7 @@ private:
     bool mirrored;
     bool handVisible;
     bool conceded;
-    
+
     bool dialogSemaphore;
     bool clearCardsToDelete();
     QList<CardItem *> cardsToDelete;

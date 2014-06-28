@@ -63,7 +63,7 @@ ZoneViewWidget::ZoneViewWidget(Player *_player, CardZone *_origZone, int numberC
     setAttribute(Qt::WA_DeleteOnClose);
     setZValue(2000000006);
     setFlag(ItemIgnoresTransformations);
-    
+
     QGraphicsLinearLayout *hbox = new QGraphicsLinearLayout(Qt::Horizontal);
     titleLabel = new TitleLabel;
     connect(titleLabel, SIGNAL(mouseMoved(QPointF)), this, SLOT(moveWidget(QPointF)));
@@ -72,13 +72,13 @@ ZoneViewWidget::ZoneViewWidget(Player *_player, CardZone *_origZone, int numberC
     closeButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     QGraphicsProxyWidget *closeButtonProxy = new QGraphicsProxyWidget;
     closeButtonProxy->setWidget(closeButton);
-    
+
     hbox->addItem(titleLabel);
     hbox->addItem(closeButtonProxy);
     QGraphicsLinearLayout *vbox = new QGraphicsLinearLayout(Qt::Vertical);
-    
+
     vbox->addItem(hbox);
-    
+
     if (numberCards < 0) {
         sortByNameCheckBox = new QCheckBox;
         QGraphicsProxyWidget *sortByNameProxy = new QGraphicsProxyWidget;

@@ -1406,7 +1406,7 @@ Response::ResponseCode Server_Player::cmdDumpZone(const Command_DumpZone &cmd, R
 {
 	if (!game->getGameStarted())
 		return Response::RespGameNotStarted;
-	
+
 	Server_Player *otherPlayer = game->getPlayers().value(cmd.player_id());
 	if (!otherPlayer)
 		return Response::RespNameNotFound;
@@ -1415,17 +1415,17 @@ Response::ResponseCode Server_Player::cmdDumpZone(const Command_DumpZone &cmd, R
 		return Response::RespNameNotFound;
 	if (!((zone->getType() == ServerInfo_Zone::PublicZone) || (this == otherPlayer)))
 		return Response::RespContextError;
-	
+
 	int numberCards = cmd.number_cards();
 	const QList<Server_Card *> &cards = zone->getCards();
-	
+
 	Response_DumpZone *re = new Response_DumpZone;
 	ServerInfo_Zone *zoneInfo = re->mutable_zone_info();
 	zoneInfo->set_name(zone->getName().toStdString());
 	zoneInfo->set_type(zone->getType());
 	zoneInfo->set_with_coords(zone->hasCoords());
 	zoneInfo->set_card_count(numberCards < cards.size() ? cards.size() : numberCards);
-	
+
 	for (int i = 0; (i < cards.size()) && (i < numberCards || numberCards == -1); ++i) {
 		Server_Card *card = cards[i];
 		QString displayedName = card->getFaceDown() ? QString() : card->getName();
@@ -1445,7 +1445,7 @@ Response::ResponseCode Server_Player::cmdDumpZone(const Command_DumpZone &cmd, R
 			cardInfo->set_annotation(card->getAnnotation().toStdString());
 			cardInfo->set_destroy_on_zone_change(card->getDestroyOnZoneChange());
 			cardInfo->set_doesnt_untap(card->getDoesntUntap());
-			
+
 			QMapIterator<int, int> cardCounterIterator(card->getCounters());
 			while (cardCounterIterator.hasNext()) {
 				cardCounterIterator.next();
@@ -1463,7 +1463,7 @@ Response::ResponseCode Server_Player::cmdDumpZone(const Command_DumpZone &cmd, R
 	}
 	if (zone->getType() == ServerInfo_Zone::HiddenZone) {
 		zone->setCardsBeingLookedAt(numberCards);
-		
+
 		Event_DumpZone event;
 		event.set_zone_owner_id(otherPlayer->getPlayerId());
 		event.set_zone_name(zone->getName().toStdString());
